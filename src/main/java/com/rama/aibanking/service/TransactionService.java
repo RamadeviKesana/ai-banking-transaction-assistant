@@ -14,14 +14,18 @@ public class TransactionService {
     private final List<Transaction> transactions = new ArrayList<>();
 
     public Transaction createTransaction(Transaction transaction) {
+
         transaction.setId(UUID.randomUUID());
         transaction.setTimestamp(LocalDateTime.now());
 
-        if (transaction.getCategory() == null || transaction.getCategory().isBlank()) {
+        if (transaction.getCategory() == null ||
+                transaction.getCategory().isBlank()) {
+
             transaction.setCategory("UNCATEGORIZED");
         }
 
         transactions.add(transaction);
+
         return transaction;
     }
 
