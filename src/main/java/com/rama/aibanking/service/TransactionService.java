@@ -1,21 +1,29 @@
 package com.rama.aibanking.service;
 
+import com.rama.aibanking.kafka.TransactionProducer;
 import com.rama.aibanking.model.Transaction;
+import com.rama.aibanking.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class TransactionService {
 
-    private final List<Transaction> transactions = new ArrayList<>();
+    private final TransactionRepository transactionRepository;
+    private final TransactionProducer transactionProducer;
+
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            TransactionProducer transactionProducer) {
+
+        this.transactionRepository = transactionRepository;
+        this.transactionProducer = transactionProducer;
+    }
 
     public Transaction createTransaction(Transaction transaction) {
 
-        transaction.setId(UUID.randomUUID());
         transaction.setTimestamp(LocalDateTime.now());
 
         if (transaction.getCategory() == null ||
@@ -24,12 +32,15 @@ public class TransactionService {
             transaction.setCategory("UNCATEGORIZED");
         }
 
-        transactions.add(transaction);
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
 
-        return transaction;
+        transactionProducer.sendTransaction(savedTransaction);
+
+        return savedTransaction;
     }
 
     public List<Transaction> getTransactions() {
-        return List.copyOf(transactions);
+        return transactionRepository.findAll();
     }
 }
